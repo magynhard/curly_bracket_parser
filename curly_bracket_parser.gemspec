@@ -9,7 +9,7 @@ Gem::Specification.new do |spec|
   spec.authors       = ["Matthäus Beyrle"]
   spec.email         = ["curly_bracket_parser.gemspec@mail.magynhard.de"]
 
-  spec.summary       = %q{Parser for variables inside templates/strings and files}
+  spec.summary       = %q{Simple parser to replace variables inside templates/strings and files}
   spec.homepage      = "https://github.com/magynhard/curly_bracket_parser"
   spec.license       = "MIT"
 
