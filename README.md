@@ -1,6 +1,6 @@
 # curly_bracket_parser
 
-Simple parser to replace curly brackets {{like_this}} inside strings like URLs, Texts or even files easily.
+Simple parser to replace curly brackets {{like_this}} inside strings like URLs, texts or even files easily.
 
 alpha version ... to be done ...
 
