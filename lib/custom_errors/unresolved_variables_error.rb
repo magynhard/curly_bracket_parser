@@ -1,0 +1,2 @@
+class UnresolvedVariablesError < StandardError
+end
