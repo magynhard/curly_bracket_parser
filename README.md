@@ -52,8 +52,25 @@ TODO
 
 ### Examples
 
-TODO
+#### Basic
 
+```ruby
+    url = "https://my-domain.com/items/{{item_id}}"
+    final_url = CurlyBracketParser.parse url, item_id: 123
+    # => "https://my-domain.com/items/123"
+```
+
+#### Filters
+
+```ruby
+    url = "https://my-domain.com/catalog/{{item_name|snake_case}}"
+    final_url = CurlyBracketParser.parse url, item_name: 'MegaSuperItem'
+    # => "https://my-domain.com/catalog/mega_super_item"
+```
+
+#### Globals
+
+TODO
 
 
 
