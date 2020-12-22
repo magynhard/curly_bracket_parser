@@ -23,6 +23,8 @@ module CurlyBracketParser
 
   #----------------------------------------------------------------------------------------------------
 
+  # Parse given string and replace the included variables by the given variables
+  #
   # @param [String] string to parse
   # @param [Hash<Symbol => String>] variables <key: 'value'>
   # @param [Symbol] unresolved_vars :raise, :keep, :replace => define how to act when unresolved variables within the string are found.
@@ -56,23 +58,47 @@ module CurlyBracketParser
 
   #----------------------------------------------------------------------------------------------------
 
-  def self.parse_file(path, variables, options = {})
-    raise "NOT IMPLEMENTED YET!"
+  # Parse the content of the file of the given path with #parse and return it.
+  # The original file keeps unmodified.
+  #
+  # @param [String] string to parse
+  # @param [Hash<Symbol => String>] variables <key: 'value'>
+  # @param [Symbol] unresolved_vars :raise, :keep, :replace => define how to act when unresolved variables within the string are found.
+  # @param [String] replace_pattern pattern used when param unresolved_vars is set to :replace. You can include the var name \\1 and filter \\1. Empty string to remove unresolved variables.
+  # @return [String, UnresolvedVariablesError] parsed string
+  def self.parse_file(path, variables, unresolved_vars: :raise, replace_pattern: "##\\1##")
+    file_content = File.read path
+    parse(file_content, variables, unresolved_vars: unresolved_vars, replace_pattern: replace_pattern)
   end
 
-  def self.parse_file!(path, variables, options = {})
+  # Parse the content of the file of the given path with #parse and return it.
+  # The original file will be overwritten by the parsed content.
+  #
+  # @param [String] string to parse
+  # @param [Hash<Symbol => String>] variables <key: 'value'>
+  # @param [Symbol] unresolved_vars :raise, :keep, :replace => define how to act when unresolved variables within the string are found.
+  # @param [String] replace_pattern pattern used when param unresolved_vars is set to :replace. You can include the var name \\1 and filter \\1. Empty string to remove unresolved variables.
+  # @return [String, UnresolvedVariablesError] parsed string
+  def self.parse_file!(path, variables, unresolved_vars: :raise, replace_pattern: "##\\1##")
+    parsed_file = parse_file path, variables, unresolved_vars: unresolved_vars, replace_pattern: replace_pattern
+    File.write path, parsed_file
+    parsed_file
+  end
+
+  #----------------------------------------------------------------------------------------------------
+
+  # Register your custom filter to the filter list
+  #
+  # @param [String] name of the filter, also used then in your strings, e.g. {{var_name|my_filter_name}}
+  # @param [Lambda] function of the filter to run the variable against
+  # @return [Boolean] true if filter was added, false if it already exists
+  def self.register_filter(name, &block)
     raise "NOT IMPLEMENTED YET!"
   end
 
   #----------------------------------------------------------------------------------------------------
 
-  def self.register_filter(name, function)
-    raise "NOT IMPLEMENTED YET!"
-  end
-
-  #----------------------------------------------------------------------------------------------------
-
-  def self.register_default_variable(name, function)
+  def self.register_default_variable(name, &block)
     raise "NOT IMPLEMENTED YET!"
   end
 
@@ -133,12 +159,19 @@ module CurlyBracketParser
 
   #----------------------------------------------------------------------------------------------------
 
+  # Check if any variable is included in the given string
+  # @param [Object] string
+  # @return [Boolean] true if any variable is included in the given string, otherwise false
   def self.any_variable_included?(string)
     string.match(VARIABLE_REGEX) != nil
   end
 
   #----------------------------------------------------------------------------------------------------
 
+  # Check if one of the given variable names is included in the given string
+  # @param [Array<String>] variable_names
+  # @param [String] string
+  # @return [Boolean] true if one given variable name is included in given the string, otherwise false
   def self.includes_one_variable_of(variable_names, string)
     decoded_variables(string).each do |dvar|
       return true if variable_names.include?(dvar[:name])
