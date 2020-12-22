@@ -1,9 +1,14 @@
 # curly_bracket_parser
 
-Simple parser to replace curly brackets {{like_this}} inside strings like URLs, texts or even files easily.
+Simple parser to replace curly brackets `{{like_this}}` inside strings like URLs, texts or even files easily.
 
-alpha version ... to be done ...
+Additional support for build-in filters and custom filters make them more powerful. `{{example|my_filter}}`
 
+Using [LuckyCase](https://github.com/magynhard/lucky_case), all its case formats are supported as filter.
+
+```diff
+- beta version
+```
 
 
 
@@ -36,23 +41,13 @@ Or install it yourself as:
 
     $ gem install curly_bracket_parser
     
-## Common information
-
-TODO
-
-
-
-
-
 
 <a name="usage"></a>
-## Usage
+## Usage examples
 
-TODO
+You can either parse variables inside strings or even directly in files.
 
-### Examples
-
-#### Basic
+### Basic
 
 ```ruby
     url = "https://my-domain.com/items/{{item_id}}"
@@ -60,7 +55,7 @@ TODO
     # => "https://my-domain.com/items/123"
 ```
 
-#### Filters
+### Filters
 
 ```ruby
     url = "https://my-domain.com/catalog/{{item_name|snake_case}}"
@@ -68,9 +63,51 @@ TODO
     # => "https://my-domain.com/catalog/mega_super_item"
 ```
 
-#### Globals
+For a list of built-in filters visit [LuckyCase](https://github.com/magynhard/lucky_case).
 
-TODO
+#### Define your custom filter
+
+```ruby
+    CurlyBracketParser.register_filter('7times') do |string|
+      string.to_s * 7
+    end
+
+    text = "Paul went out and screamed: A{{scream|7times}}h"
+    final_text = CurlyBracketParser.parse text, scream: 'a'
+    # => "Paul went out and screamed: Aaaaaaaah"
+```
+
+### Files
+
+<ins>test.html</ins>
+```html
+<h1>{{title|sentence_case}}</h1>
+```
+
+```ruby
+    parsed_file = CurlyBracketParser.parse_file './test.html', title: 'WelcomeAtHome'
+    # => "<h1>Welcome at home</h1>"
+```
+
+Use `#parse_file!` instead to write the parsed string directly into the file!
+
+### Default variables
+
+You can define default variables, which will be replaced automatically without passing them by parameters, but can be overwritten with parameters.
+
+Because of providing blocks, your variables can dynamically depend on other states.
+
+```ruby
+    CurlyBracketParser.register_default_var('version') do
+      '1.0.2'
+    end
+
+    text = "You are running version {{version}}"
+    CurlyBracketParser.parse text
+    # => "You are running version 1.0.2"
+    CurlyBracketParser.parse text, version: '0.7.0'
+    # => "You are running version 0.7.0"
+```
 
 
 
