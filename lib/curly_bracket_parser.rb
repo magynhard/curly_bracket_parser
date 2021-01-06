@@ -134,6 +134,9 @@ module CurlyBracketParser
 
   #----------------------------------------------------------------------------------------------------
 
+  # Retrieve Array with valid filters
+  #
+  # @return [Array<String>] of valid filters
   def self.valid_filters
     all_filters = VALID_DEFAULT_FILTERS
     @@registered_filters ||= {}
@@ -142,20 +145,33 @@ module CurlyBracketParser
 
   #----------------------------------------------------------------------------------------------------
 
+  # Check if a given filter is valid
+  #
+  # @param [String] name
+  # @return [Boolean] true if filter exists, otherwise false
   def self.valid_filter?(name)
     self.valid_filters.include? name
   end
 
   #----------------------------------------------------------------------------------------------------
 
+  # Check if given variable has a defined filter
+  # @example
+  #   {{variable|filter}}  => has filter, true
+  #   {{variable2}}        => has no filter, false
+  #
+  # @param [String] variable
+  # @return [Boolean] true if has a defined filter, otherwise false
   def self.has_filter?(variable)
     decode_variable(variable)[:filter] != nil
   end
 
   #----------------------------------------------------------------------------------------------------
 
-  # @param [String] name of the variable to be replaced
-  # @return [String] replacement of variable name
+  # Return the given default variable by processing its block/proc
+  #
+  # @param [String] name of the variable to return
+  # @return [String] value of the variable
   def self.process_default_var(name)
     @@registered_default_vars ||= {}
     name = name.to_s
@@ -169,6 +185,12 @@ module CurlyBracketParser
 
   #----------------------------------------------------------------------------------------------------
 
+  # Register a default variable to be replaced automatically by the given block value in future
+  # If the variable exists already, it will throw an VariableAlreadyRegisteredError
+  #
+  # @param [String] name of the default var
+  # @param [Proc] block
+  # @return [Proc] given block
   def self.register_default_var(name, &block)
     @@registered_default_vars ||= {}
     name = name.to_s
@@ -181,6 +203,12 @@ module CurlyBracketParser
 
   #----------------------------------------------------------------------------------------------------
 
+  # Register a default variable to be replaced automatically by the given block value in future
+  # If the variable exists already, it will be overwritten
+  #
+  # @param [String] name of the default var
+  # @param [Proc] block
+  # @return [Proc] given block
   def self.register_default_var!(name, &block)
     @@registered_default_vars ||= {}
     name = name.to_s
@@ -189,6 +217,9 @@ module CurlyBracketParser
 
   #----------------------------------------------------------------------------------------------------
 
+  # Unregister / remove an existing default variable
+  #
+  # @param [String] name of the variable
   def self.unregister_default_var(name)
     @@registered_default_vars ||= {}
     name = name.to_s
@@ -198,6 +229,9 @@ module CurlyBracketParser
 
   #----------------------------------------------------------------------------------------------------
 
+  # Return an array of registered default variables
+  #
+  # @return [Array<String>]
   def self.registered_default_vars
     @@registered_default_vars ||= {}
     @@registered_default_vars.keys.map(&:to_s)
@@ -205,6 +239,10 @@ module CurlyBracketParser
 
   #----------------------------------------------------------------------------------------------------
 
+  # Check if the given variable is a registered default variable
+  #
+  # @param [String] name of the variable
+  # @return [Boolean] true if variable is registered, otherwise false
   def self.registered_default_var?(name)
     self.registered_default_vars.include? name
   end
