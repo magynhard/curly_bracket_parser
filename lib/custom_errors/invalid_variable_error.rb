@@ -1,0 +1,2 @@
+class InvalidVariableError < StandardError
+end

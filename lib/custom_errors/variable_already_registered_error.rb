@@ -1,0 +1,2 @@
+class VariableAlreadyRegisteredError < StandardError
+end

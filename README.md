@@ -1,14 +1,10 @@
 # curly_bracket_parser
 
-Simple parser to replace curly brackets `{{like_this}}` inside strings like URLs, texts or even files easily.
+Ruby gem with simple parser to replace curly brackets `{{like_this}}` inside strings like URLs, texts or even files easily.
 
 Additional support for build-in filters and custom filters make them more powerful. `{{example|my_filter}}`
 
 Using [LuckyCase](https://github.com/magynhard/lucky_case), all its case formats are supported as filter.
-
-```diff
-- beta version
-```
 
 
 

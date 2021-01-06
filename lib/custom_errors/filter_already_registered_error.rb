@@ -1,0 +1,2 @@
+class FilterAlreadyRegisteredError < StandardError
+end

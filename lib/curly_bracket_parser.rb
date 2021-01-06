@@ -1,7 +1,11 @@
 require 'lucky_case'
 
 require 'curly_bracket_parser/version'
+require_relative 'custom_errors/filter_already_registered_error'
+require_relative 'custom_errors/invalid_filter_error'
+require_relative 'custom_errors/invalid_variable_error'
 require_relative 'custom_errors/unresolved_variables_error'
+require_relative 'custom_errors/variable_already_registered_error'
 
 #
 # CurlyBracketParser
@@ -17,8 +21,8 @@ module CurlyBracketParser
   VARIABLE_DECODER_REGEX = /{{([^{}\|]+)\|?([^{}\|]*)}}/
   VARIABLE_REGEX = /{{[^{}]+}}/
 
-  VALID_FILTERS = [
-      LuckyCase::CASES.keys.map(&:to_s)
+  VALID_DEFAULT_FILTERS = [
+    LuckyCase::CASES.keys.map(&:to_s)
   ].flatten
 
   #----------------------------------------------------------------------------------------------------
@@ -31,13 +35,21 @@ module CurlyBracketParser
   # @param [String] replace_pattern pattern used when param unresolved_vars is set to :replace. You can include the var name \\1 and filter \\1. Empty string to remove unresolved variables.
   # @return [String, UnresolvedVariablesError] parsed string
   def self.parse(string, variables, unresolved_vars: :raise, replace_pattern: "##\\1##")
+    variables ||= {}
     result_string = string.clone
     if CurlyBracketParser.any_variable_included? string
       loop do
         variables(string).each do |string_var|
           name, filter = decode_variable(string_var)
           if variables[name.to_sym]
-            value = process_filter(variables[name.to_sym], filter)
+            value = if filter
+                      process_filter(filter, variables[name.to_sym])
+                    else
+                      variables[name.to_sym]
+                    end
+            result_string.gsub!(string_var, value)
+          elsif registered_default_var?(name.to_s)
+            value = process_default_var(name)
             result_string.gsub!(string_var, value)
           end
         end
@@ -89,38 +101,112 @@ module CurlyBracketParser
 
   # Register your custom filter to the filter list
   #
-  # @param [String] name of the filter, also used then in your strings, e.g. {{var_name|my_filter_name}}
+  # @param [String] filter name of the filter, also used then in your strings, e.g. {{var_name|my_filter_name}}
   # @param [Lambda] function of the filter to run the variable against
   # @return [Boolean] true if filter was added, false if it already exists
-  def self.register_filter(name, &block)
-    raise "NOT IMPLEMENTED YET!"
-  end
-
-  #----------------------------------------------------------------------------------------------------
-
-  def self.register_default_variable(name, &block)
-    raise "NOT IMPLEMENTED YET!"
-  end
-
-  #----------------------------------------------------------------------------------------------------
-
-  def self.process_filter(value, filter)
-    return value unless filter
-    if VALID_FILTERS.include? filter
-      if LuckyCase.valid_case_type? filter
-        return LuckyCase.convert_case(value, filter)
-      else
-        raise "FILTER '#{filter}' NOT IMPLEMENTED YET!"
-      end
+  def self.register_filter(filter, &block)
+    @@registered_filters ||= {}
+    filter = filter.to_s
+    if valid_filter?(filter)
+      raise FilterAlreadyRegisteredError, "The given filter name '#{filter}' is already registered"
     else
-      raise "Invalid filter '#{filter}'"
+      @@registered_filters[filter] = block
     end
+  end
+
+  #----------------------------------------------------------------------------------------------------
+
+  # @param [String] filter name of the filter, also used then in your strings, e.g. {{var_name|my_filter_name}}
+  # @param [String] value string to apply the specified filter on
+  # @return [String] converted string with applied filter
+  def self.process_filter(filter, value)
+    @@registered_filters ||= {}
+    filter = filter.to_s
+    if @@registered_filters[filter]
+      @@registered_filters[filter].call(value)
+    elsif VALID_DEFAULT_FILTERS.include?(filter) && LuckyCase.valid_case_type?(filter)
+      LuckyCase.convert_case(value, filter)
+    else
+      message = "Invalid filter '#{filter}'. Valid filters are: #{self.valid_filters.join(' ')}"
+      raise InvalidFilterError, message
+    end
+  end
+
+  #----------------------------------------------------------------------------------------------------
+
+  def self.valid_filters
+    all_filters = VALID_DEFAULT_FILTERS
+    @@registered_filters ||= {}
+    all_filters + @@registered_filters.keys.map(&:to_s)
+  end
+
+  #----------------------------------------------------------------------------------------------------
+
+  def self.valid_filter?(name)
+    self.valid_filters.include? name
   end
 
   #----------------------------------------------------------------------------------------------------
 
   def self.has_filter?(variable)
     decode_variable(variable)[:filter] != nil
+  end
+
+  #----------------------------------------------------------------------------------------------------
+
+  # @param [String] name of the variable to be replaced
+  # @return [String] replacement of variable name
+  def self.process_default_var(name)
+    @@registered_default_vars ||= {}
+    name = name.to_s
+    if @@registered_default_vars[name]
+      @@registered_default_vars[name].call()
+    else
+      message = "Invalid default variable '#{name}'. Valid registered default variables are: #{self.registered_default_vars.join(' ')}"
+      raise InvalidVariableError, message
+    end
+  end
+
+  #----------------------------------------------------------------------------------------------------
+
+  def self.register_default_var(name, &block)
+    @@registered_default_vars ||= {}
+    name = name.to_s
+    if registered_default_var?(name)
+      raise VariableAlreadyRegisteredError, "The given variable name '#{name}' is already registered. If you want to override that variable explicitly, call #register_default_var! instead!"
+    else
+      @@registered_default_vars[name] = block
+    end
+  end
+
+  #----------------------------------------------------------------------------------------------------
+
+  def self.register_default_var!(name, &block)
+    @@registered_default_vars ||= {}
+    name = name.to_s
+    @@registered_default_vars[name] = block
+  end
+
+  #----------------------------------------------------------------------------------------------------
+
+  def self.unregister_default_var(name)
+    @@registered_default_vars ||= {}
+    name = name.to_s
+    @@registered_default_vars.delete(name)
+    nil
+  end
+
+  #----------------------------------------------------------------------------------------------------
+
+  def self.registered_default_vars
+    @@registered_default_vars ||= {}
+    @@registered_default_vars.keys.map(&:to_s)
+  end
+
+  #----------------------------------------------------------------------------------------------------
+
+  def self.registered_default_var?(name)
+    self.registered_default_vars.include? name
   end
 
   #----------------------------------------------------------------------------------------------------
@@ -145,7 +231,7 @@ module CurlyBracketParser
   def self.decoded_variables(string)
     var_name = 0
     var_filter = 1
-    string.scan(VARIABLE_DECODER_REGEX).map { |e| {"#{e[var_name].strip}": e[var_filter].strip != '' ? e[var_filter].strip : nil } }.flatten
+    string.scan(VARIABLE_DECODER_REGEX).map { |e| { "#{e[var_name].strip}": e[var_filter].strip != '' ? e[var_filter].strip : nil } }.flatten
   end
 
   #----------------------------------------------------------------------------------------------------

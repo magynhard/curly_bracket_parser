@@ -1,0 +1,2 @@
+class InvalidFilterError < StandardError
+end

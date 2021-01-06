@@ -399,3 +399,117 @@ RSpec.describe CurlyBracketParser, '#parse_file!' do
     end
   end
 end
+
+RSpec.describe CurlyBracketParser, '#register_filter' do
+  context 'register and use custom filters' do
+    it 'includes a registered filter after registration' do
+      filter_name = 'my_one'
+      CurlyBracketParser.register_filter filter_name do |string|
+        string
+      end
+      expect(CurlyBracketParser.valid_filters).to include(filter_name)
+    end
+    it 'can not register/overwrite a default filter' do
+      expect {
+        filter_name = 'snake_case'
+        CurlyBracketParser.register_filter filter_name do |string|
+          string
+        end
+      }.to raise_error(FilterAlreadyRegisteredError)
+    end
+    it 'can not register/overwrite a new registered filter' do
+      filter_name = 'my_second'
+      CurlyBracketParser.register_filter filter_name do |string|
+        string
+      end
+      expect {
+        CurlyBracketParser.register_filter filter_name do |string|
+          string
+        end
+      }.to raise_error(FilterAlreadyRegisteredError)
+    end
+    it 'can use a registered filter #1' do
+      filter_name = 'duplicate'
+      CurlyBracketParser.register_filter filter_name do |string|
+        string.to_s + string.to_s
+      end
+      expect(CurlyBracketParser.process_filter(filter_name,"hooray")).to eql("hoorayhooray")
+    end
+    it 'can use a registered filter #2' do
+      filter_name = 'snake_cake'
+      CurlyBracketParser.register_filter filter_name do |string|
+        LuckyCase.snake_case string
+      end
+      expect(CurlyBracketParser.process_filter(filter_name,"TheSaladTastesSour")).to eql("the_salad_tastes_sour")
+    end
+  end
+end
+
+RSpec.describe CurlyBracketParser, '#register_default_var' do
+  context 'register and use default variables' do
+    it 'includes a registered variable automatically after registration' do
+      variable_name = 'my_default1'
+      variable_value = 'MySuperValue1'
+      CurlyBracketParser.register_default_var variable_name do
+        variable_value
+      end
+      expect(CurlyBracketParser.registered_default_vars).to include(variable_name)
+    end
+    it 'includes a registered variable automatically after registration #2' do
+      variable_name = 'my_default11'
+      variable_value = 'MySuperValue11'
+      CurlyBracketParser.register_default_var variable_name do
+        variable_value
+      end
+      expect(CurlyBracketParser.registered_default_var?(variable_name)).to eql(true)
+    end
+    it 'can not register/overwrite a existing registered variable' do
+      variable_name = 'my_default2'
+      variable_value = 'MySuperValue2'
+      CurlyBracketParser.register_default_var variable_name do
+        variable_value
+      end
+      expect {
+        CurlyBracketParser.register_default_var variable_name do
+          variable_value
+        end
+      }.to raise_error(VariableAlreadyRegisteredError)
+    end
+    it 'can process default variable' do
+      variable_name = 'my_default7'
+      variable_value = 'MySuperValue7'
+      CurlyBracketParser.register_default_var variable_name do
+        variable_value
+      end
+      expect(CurlyBracketParser.process_default_var(variable_name)).to eql(variable_value)
+    end
+    it 'can use a registered default value #1' do
+      variable_name = 'my_default3'
+      variable_value = 'MySuperValue3'
+      CurlyBracketParser.register_default_var variable_name do
+        variable_value
+      end
+      expect(CurlyBracketParser.parse("Some{{#{variable_name}}}Good", nil)).to eql("Some#{variable_value}Good")
+    end
+    it 'can overwrite a registered default value by parameter' do
+      variable_name = 'my_default9'
+      variable_value = 'MySuperValue9'
+      CurlyBracketParser.register_default_var variable_name do
+        variable_value
+      end
+      expect(CurlyBracketParser.parse("Some{{#{variable_name}}}Good", { my_default9: 'Overwritten'})).to eql("SomeOverwrittenGood")
+    end
+    it 'can overwrite a registered default value by function' do
+      variable_name = 'my_default22'
+      variable_value = 'MySuperValue22'
+      variable_overwrite_value = 'MySuperValue77'
+      CurlyBracketParser.register_default_var variable_name do
+        variable_value
+      end
+      CurlyBracketParser.register_default_var! variable_name do
+        variable_overwrite_value
+      end
+      expect(CurlyBracketParser.parse("Some{{#{variable_name}}}Good", { my_default9: 'Overwritten'})).to eql("Some#{variable_overwrite_value}Good")
+    end
+  end
+end
