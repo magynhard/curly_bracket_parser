@@ -4,7 +4,7 @@ Ruby gem providing a simple parser to replace curly brackets `{{like_this}}` ins
 
 Additional support for build-in filters and custom filters make them more powerful. `{{example|my_filter}}`
 
-Using [LuckyCase](https://github.com/magynhard/lucky_case), all its case formats are supported as filter.
+Using [LuckyCase](https://github.com/magynhard/lucky_case), all its case formats are supported as filter by default.
 
 
 
@@ -13,7 +13,7 @@ Using [LuckyCase](https://github.com/magynhard/lucky_case), all its case formats
 # Contents
 
 * [Installation](#installation)
-* [Usage](#usage)
+* [Usage examples](#usage)
 * [Documentation](#documentation)
 * [Contributing](#contributing)
 
