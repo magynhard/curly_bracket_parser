@@ -91,7 +91,7 @@ Use `#parse_file!` instead to write the parsed string directly into the file!
 
 You can define default variables, which will be replaced automatically without passing them by parameters, but can be overwritten with parameters.
 
-Because of providing blocks, your variables can dynamically depend on other states.
+Because of providing blocks, your variables can dynamically depend on other states (e.g. current date).
 
 ```ruby
     CurlyBracketParser.register_default_var('version') do
