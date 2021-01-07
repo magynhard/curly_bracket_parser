@@ -32,7 +32,7 @@ module CurlyBracketParser
   # @param [String] string to parse
   # @param [Hash<Symbol => String>] variables <key: 'value'>
   # @param [Symbol] unresolved_vars :raise, :keep, :replace => define how to act when unresolved variables within the string are found.
-  # @param [String] replace_pattern pattern used when param unresolved_vars is set to :replace. You can include the var name \\1 and filter \\1. Empty string to remove unresolved variables.
+  # @param [String] replace_pattern pattern used when param unresolved_vars is set to :replace. You can include the var name \\1 and filter \\2. Empty string to remove unresolved variables.
   # @return [String, UnresolvedVariablesError] parsed string
   def self.parse(string, variables, unresolved_vars: :raise, replace_pattern: "##\\1##")
     variables ||= {}
