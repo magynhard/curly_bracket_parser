@@ -528,3 +528,14 @@ RSpec.describe CurlyBracketParser, '#unregister_default_var' do
     end
   end
 end
+
+RSpec.describe CurlyBracketParser, '#decoded variables' do
+  context 'decode a string and get its variables' do
+    it 'decode string with several variables, with and without filters' do
+      string = 'This is my {{var1}} super string, containing {{count|filter_some}} variables and a lot of {{fun}}'
+      decoded_variables = CurlyBracketParser.decoded_variables string
+      expect(decoded_variables.map{|e| e.keys.flatten }.flatten).to match_array(%i[ var1 count fun ])
+      expect(decoded_variables.map{|e| e.values.flatten}.flatten).to match_array([nil, 'filter_some', nil])
+    end
+  end
+end
