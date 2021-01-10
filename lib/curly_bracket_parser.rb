@@ -103,7 +103,7 @@ module CurlyBracketParser
   #
   # @param [String] filter name of the filter, also used then in your strings, e.g. {{var_name|my_filter_name}}
   # @param [Lambda] function of the filter to run the variable against
-  # @return [Boolean] true if filter was added, false if it already exists
+  # @raise [FilterAlreadyRegisteredError] if filter does already exist
   def self.register_filter(filter, &block)
     @@registered_filters ||= {}
     filter = filter.to_s
@@ -112,10 +112,13 @@ module CurlyBracketParser
     else
       @@registered_filters[filter] = block
     end
+    nil
   end
 
   #----------------------------------------------------------------------------------------------------
 
+  # Process the given value with the given filter
+  #
   # @param [String] filter name of the filter, also used then in your strings, e.g. {{var_name|my_filter_name}}
   # @param [String] value string to apply the specified filter on
   # @return [String] converted string with applied filter
@@ -151,19 +154,6 @@ module CurlyBracketParser
   # @return [Boolean] true if filter exists, otherwise false
   def self.valid_filter?(name)
     self.valid_filters.include? name
-  end
-
-  #----------------------------------------------------------------------------------------------------
-
-  # Check if given variable has a defined filter
-  # @example
-  #   {{variable|filter}}  => has filter, true
-  #   {{variable2}}        => has no filter, false
-  #
-  # @param [String] variable
-  # @return [Boolean] true if has a defined filter, otherwise false
-  def self.has_filter?(variable)
-    decode_variable(variable)[:filter] != nil
   end
 
   #----------------------------------------------------------------------------------------------------
