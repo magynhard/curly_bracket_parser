@@ -260,7 +260,8 @@ module CurlyBracketParser
 
   #----------------------------------------------------------------------------------------------------
 
-  # scans the given url for variables with pattern '{{var}}'
+  # Scans the given url for variables with pattern '{{var|optional_filter}}'
+  #
   # @param [String] string to scan
   # @return [Array<Hash<Symbol => String>>] array of variable names and its filters
   def self.decoded_variables(string)
