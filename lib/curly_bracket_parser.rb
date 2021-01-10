@@ -168,7 +168,7 @@ module CurlyBracketParser
     if @@registered_default_vars[name]
       @@registered_default_vars[name].call()
     else
-      message = "Invalid default variable '#{name}'. Valid registered default variables are: #{self.registered_default_vars.join(' ')}"
+      message = "Invalid default variable '#{name}'. Valid registered default variables are: #{self.registered_default_vars.keys.join(' ')}"
       raise InvalidVariableError, message
     end
   end
