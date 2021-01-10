@@ -524,7 +524,7 @@ end
 
 RSpec.describe CurlyBracketParser, '#unregister_default_var' do
   context 'unregister default variables' do
-    it 'registers and unregistereds a default variable' do
+    it 'registers and unregisters a default variable' do
       variable_name = 'my_default_un'
       variable_value = 'MySuperValueUn'
       CurlyBracketParser.register_default_var variable_name do
