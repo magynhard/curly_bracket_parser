@@ -265,9 +265,9 @@ module CurlyBracketParser
   # @param [String] string to scan
   # @return [Array<Hash<Symbol => String>>] array of variable names and its filters
   def self.decoded_variables(string)
-    var_name = 0
-    var_filter = 1
-    string.scan(VARIABLE_DECODER_REGEX).map { |e| { "#{e[var_name].strip}": e[var_filter].strip != '' ? e[var_filter].strip : nil } }.flatten
+    var_name_index = 0
+    var_filter_index = 1
+    string.scan(VARIABLE_DECODER_REGEX).map { |e| { "#{e[var_name_index].strip}": e[var_filter_index].strip != '' ? e[var_filter_index].strip : nil } }.flatten
   end
 
   #----------------------------------------------------------------------------------------------------
