@@ -212,11 +212,16 @@ module CurlyBracketParser
   # Unregister / remove an existing default variable
   #
   # @param [String] name of the variable
+  # @return [Boolean] true if variable existed and was unregistered, false if it didn't exist
   def self.unregister_default_var(name)
     @@registered_default_vars ||= {}
     name = name.to_s
-    @@registered_default_vars.delete(name)
-    nil
+    if @@registered_default_vars[name]
+      @@registered_default_vars.delete(name)
+      true
+    else
+      false
+    end
   end
 
   #----------------------------------------------------------------------------------------------------
