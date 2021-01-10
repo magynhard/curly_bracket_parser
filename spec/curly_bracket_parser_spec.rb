@@ -444,6 +444,12 @@ RSpec.describe CurlyBracketParser, '#register_filter' do
       end
       expect(CurlyBracketParser.process_filter(filter_name,"TheSaladTastesSour")).to eql("the_salad_tastes_sour")
     end
+    it 'can not use a unknown filter' do
+      filter_name = 'unkown_filter'
+      expect {
+        CurlyBracketParser.process_filter filter_name, "someString"
+      }.to raise_error(InvalidFilterError)
+    end
   end
 end
 
