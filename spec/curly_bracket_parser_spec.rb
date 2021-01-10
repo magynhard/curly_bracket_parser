@@ -136,12 +136,14 @@ RSpec.describe CurlyBracketParser, '#parse_file' do
           two: "Two",
           three: "FURY"
       }
+      source_string = "Today {{one}} person walked {{two}} times around {{three}}"
       tmp_file = Tempfile.new('spec_test_1')
-      tmp_file.write "Today {{one}} person walked {{two}} times around {{three}}"
+      tmp_file.write source_string
       tmp_file.close
       expected_string = "Today one person walked Two times around FURY"
       parsed = CurlyBracketParser.parse_file(tmp_file.path, variables)
-      expect(parsed).to eql(expected_string)
+      expect(parsed).to eql(expected_string) # string parsed
+      expect(File.read(tmp_file.path)).to eql(source_string) # source file remains unmodified
       tmp_file.unlink
     end
     it 'parses a set of plain variables with spaces before or after name or filter without filters' do
