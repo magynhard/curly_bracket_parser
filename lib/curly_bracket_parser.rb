@@ -40,7 +40,9 @@ module CurlyBracketParser
     if CurlyBracketParser.any_variable_included? string
       loop do
         variables(string).each do |string_var|
-          name, filter = decode_variable(string_var)
+          dec = decode_variable(string_var)
+          name = dec[:name]
+          filter = dec[:filter]
           if variables[name.to_sym]
             value = if filter
                       process_filter(filter, variables[name.to_sym])
@@ -252,22 +254,24 @@ module CurlyBracketParser
   #   '{{var_name|filter_name}}' => { name: 'var_name', filter: 'filter_name' }
   #
   # @param [String] variable
-  # @return [Array(String, String)] name, filter
+  # @return [Hash<String => String>] name, filter
   def self.decode_variable(variable)
-    var = decoded_variables(variable).first
-    [var.keys.first, var.values.first]
+    decoded_variables(variable).first
   end
 
   #----------------------------------------------------------------------------------------------------
 
   # Scans the given url for variables with pattern '{{var|optional_filter}}'
   #
+  # @example
+  #   'The variable {{my_var|my_filter}} is inside this string' => [{ name: "my_var", filter: "my_filter"}]
+  #
   # @param [String] string to scan
   # @return [Array<Hash<Symbol => String>>] array of variable names and its filters
   def self.decoded_variables(string)
     var_name_index = 0
     var_filter_index = 1
-    string.scan(VARIABLE_DECODER_REGEX).map { |e| { "#{e[var_name_index].strip}": e[var_filter_index].strip != '' ? e[var_filter_index].strip : nil } }.flatten
+    string.scan(VARIABLE_DECODER_REGEX).map { |e| { name: "#{e[var_name_index].strip}", filter: e[var_filter_index].strip != '' ? e[var_filter_index].strip : nil } }.flatten
   end
 
   #----------------------------------------------------------------------------------------------------

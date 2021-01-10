@@ -529,13 +529,26 @@ RSpec.describe CurlyBracketParser, '#unregister_default_var' do
   end
 end
 
-RSpec.describe CurlyBracketParser, '#decoded variables' do
+RSpec.describe CurlyBracketParser, '#decoded_variables' do
   context 'decode a string and get its variables' do
     it 'decode string with several variables, with and without filters' do
       string = 'This is my {{var1}} super string, containing {{count|filter_some}} variables and a lot of {{fun}}'
       decoded_variables = CurlyBracketParser.decoded_variables string
-      expect(decoded_variables.map{|e| e.keys.flatten }.flatten).to match_array(%i[ var1 count fun ])
-      expect(decoded_variables.map{|e| e.values.flatten}.flatten).to match_array([nil, 'filter_some', nil])
+      expect(decoded_variables.map{|e| e[:name] }.flatten).to match_array(%w[ var1 count fun ])
+      expect(decoded_variables.map{|e| e[:filter] }.flatten).to match_array([nil, 'filter_some', nil])
+    end
+  end
+end
+
+RSpec.describe CurlyBracketParser, '#includes_one_variable_of' do
+  context 'includes one of the given variables in the given string' do
+    it 'includes all of the three variables' do
+      string = 'This is my {{var2}} super string, containing {{count2|filter_some}} variables and a lot of {{fun3}}'
+      expect(CurlyBracketParser.includes_one_variable_of(['var2','count2','fun3'], string)).to eql(true)
+      expect(CurlyBracketParser.includes_one_variable_of(['var','count','fun'], string)).to eql(false)
+      expect(CurlyBracketParser.includes_one_variable_of(['var2'], string)).to eql(true)
+      expect(CurlyBracketParser.includes_one_variable_of(['count2'], string)).to eql(true)
+      expect(CurlyBracketParser.includes_one_variable_of(['fun3'], string)).to eql(true)
     end
   end
 end
