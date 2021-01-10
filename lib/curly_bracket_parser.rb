@@ -104,6 +104,7 @@ module CurlyBracketParser
   # @param [String] filter name of the filter, also used then in your strings, e.g. {{var_name|my_filter_name}}
   # @param [Lambda] function of the filter to run the variable against
   # @raise [FilterAlreadyRegisteredError] if filter does already exist
+  # @return [Proc] given block
   def self.register_filter(filter, &block)
     @@registered_filters ||= {}
     filter = filter.to_s
@@ -112,7 +113,6 @@ module CurlyBracketParser
     else
       @@registered_filters[filter] = block
     end
-    nil
   end
 
   #----------------------------------------------------------------------------------------------------
@@ -159,10 +159,11 @@ module CurlyBracketParser
   #----------------------------------------------------------------------------------------------------
 
   # Register a default variable to be replaced automatically by the given block value in future
-  # If the variable exists already, it will throw an VariableAlreadyRegisteredError
+  # If the variable exists already, it will raise an VariableAlreadyRegisteredError
   #
   # @param [String] name of the default var
   # @param [Proc] block
+  # @raise [VariableAlreadyRegisteredError] if variable is already registered
   # @return [Proc] given block
   def self.register_default_var(name, &block)
     @@registered_default_vars ||= {}
@@ -198,6 +199,7 @@ module CurlyBracketParser
   #
   # @param [String] name of the default var
   # @param [Proc] block
+  # @raise [VariableAlreadyRegisteredError] if variable is already registered
   # @return [Proc] given block
   def self.register_default_var!(name, &block)
     @@registered_default_vars ||= {}
