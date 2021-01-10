@@ -517,7 +517,7 @@ RSpec.describe CurlyBracketParser, '#register_default_var' do
       CurlyBracketParser.register_default_var! variable_name do
         variable_overwrite_value
       end
-      expect(CurlyBracketParser.parse("Some{{#{variable_name}}}Good", { my_default9: 'Overwritten'})).to eql("Some#{variable_overwrite_value}Good")
+      expect(CurlyBracketParser.parse("Some{{#{variable_name}}}Good", nil)).to eql("Some#{variable_overwrite_value}Good")
     end
   end
 end
