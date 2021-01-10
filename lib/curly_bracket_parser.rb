@@ -158,23 +158,6 @@ module CurlyBracketParser
 
   #----------------------------------------------------------------------------------------------------
 
-  # Return the given default variable by returning the result of its block/proc
-  #
-  # @param [String] name of the variable to return
-  # @return [String] value of the variable
-  def self.process_default_var(name)
-    @@registered_default_vars ||= {}
-    name = name.to_s
-    if @@registered_default_vars[name]
-      @@registered_default_vars[name].call()
-    else
-      message = "Invalid default variable '#{name}'. Valid registered default variables are: #{self.registered_default_vars.keys.join(' ')}"
-      raise InvalidVariableError, message
-    end
-  end
-
-  #----------------------------------------------------------------------------------------------------
-
   # Register a default variable to be replaced automatically by the given block value in future
   # If the variable exists already, it will throw an VariableAlreadyRegisteredError
   #
@@ -188,6 +171,23 @@ module CurlyBracketParser
       raise VariableAlreadyRegisteredError, "The given variable name '#{name}' is already registered. If you want to override that variable explicitly, call #register_default_var! instead!"
     else
       @@registered_default_vars[name] = block
+    end
+  end
+
+  #----------------------------------------------------------------------------------------------------
+
+  # Return the given default variable by returning the result of its block/proc
+  #
+  # @param [String] name of the variable to return
+  # @return [String] value of the variable
+  def self.process_default_var(name)
+    @@registered_default_vars ||= {}
+    name = name.to_s
+    if @@registered_default_vars[name]
+      @@registered_default_vars[name].call()
+    else
+      message = "Invalid default variable '#{name}'. Valid registered default variables are: #{self.registered_default_vars.keys.join(' ')}"
+      raise InvalidVariableError, message
     end
   end
 
