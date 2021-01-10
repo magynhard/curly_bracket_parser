@@ -513,3 +513,18 @@ RSpec.describe CurlyBracketParser, '#register_default_var' do
     end
   end
 end
+
+RSpec.describe CurlyBracketParser, '#unregister_default_var' do
+  context 'unregister default variables' do
+    it 'registers and unregistereds a default variable' do
+      variable_name = 'my_default_un'
+      variable_value = 'MySuperValueUn'
+      CurlyBracketParser.register_default_var variable_name do
+        variable_value
+      end
+      expect(CurlyBracketParser.registered_default_vars).to include(variable_name)
+      CurlyBracketParser.unregister_default_var variable_name
+      expect(CurlyBracketParser.registered_default_vars).not_to include(variable_name)
+    end
+  end
+end
