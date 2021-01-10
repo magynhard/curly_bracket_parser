@@ -272,7 +272,8 @@ module CurlyBracketParser
 
   #----------------------------------------------------------------------------------------------------
 
-  # scans the given url for variables with pattern '{{var}}'
+  # Scans the given url for variables with pattern '{{var|optional_filter}}'
+  #
   # @param [String] string to scan
   # @return [Array<String>] array of variable names and its filters
   def self.variables(string)
@@ -282,7 +283,8 @@ module CurlyBracketParser
   #----------------------------------------------------------------------------------------------------
 
   # Check if any variable is included in the given string
-  # @param [Object] string
+  #
+  # @param [String] string name of variable to check for
   # @return [Boolean] true if any variable is included in the given string, otherwise false
   def self.any_variable_included?(string)
     string.match(VARIABLE_REGEX) != nil
@@ -291,8 +293,9 @@ module CurlyBracketParser
   #----------------------------------------------------------------------------------------------------
 
   # Check if one of the given variable names is included in the given string
+  #
   # @param [Array<String>] variable_names
-  # @param [String] string
+  # @param [String] string name of variable to check for
   # @return [Boolean] true if one given variable name is included in given the string, otherwise false
   def self.includes_one_variable_of(variable_names, string)
     decoded_variables(string).each do |dvar|
