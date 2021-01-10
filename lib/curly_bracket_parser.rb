@@ -158,7 +158,7 @@ module CurlyBracketParser
 
   #----------------------------------------------------------------------------------------------------
 
-  # Return the given default variable by processing its block/proc
+  # Return the given default variable by returning the result of its block/proc
   #
   # @param [String] name of the variable to return
   # @return [String] value of the variable
