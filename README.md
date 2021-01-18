@@ -1,6 +1,7 @@
 # curly_bracket_parser
+[![Gem Version](https://badge.fury.io/rb/curly_bracket_parser.svg)](https://badge.fury.io/rb/curly_bracket_parser)
 
-Ruby gem providing a simple parser to replace curly brackets `{{like_this}}` inside strings like URLs, texts or even files easily.
+> Ruby gem providing a simple parser to replace curly brackets `{{like_this}}` inside strings like URLs, texts or even files easily.
 
 Additional support for build-in filters and custom filters make them more powerful. `{{example|my_filter}}`
 
