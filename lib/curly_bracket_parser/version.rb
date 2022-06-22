@@ -1,3 +1,3 @@
 module CurlyBracketParser
-  VERSION = '1.0.0'.freeze
+  VERSION = '1.0.4'.freeze
 end
