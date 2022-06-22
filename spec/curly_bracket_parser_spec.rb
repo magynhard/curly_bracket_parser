@@ -560,3 +560,23 @@ RSpec.describe CurlyBracketParser, '#includes_one_variable_of' do
     end
   end
 end
+
+#
+# Bugfix endless loop when using nested variables
+#
+RSpec.describe CurlyBracketParser, '#parse' do
+  context 'Using nested variables' do
+    it 'loops not endless' do
+      test_map = {
+        'animal' => 'bug',
+        'this_animal' => 'This is a {{animal}}',
+        'which_animal' => 'Which animal? {{this_animal}}'
+      }
+      puts "If you see this for more than a few seconds and nothing more happens, this test is for sure failing in an endless loop!"
+      expect(CurlyBracketParser.parse(test_map['animal'], test_map)).to eql('bug')
+      expect(CurlyBracketParser.parse(test_map['this_animal'], test_map)).to eql('This is a bug')
+      expect(CurlyBracketParser.parse(test_map['which_animal'], test_map)).to eql('Which animal? This is a bug')
+    end
+  end
+end
+

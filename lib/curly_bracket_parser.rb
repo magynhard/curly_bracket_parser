@@ -37,9 +37,11 @@ module CurlyBracketParser
   def self.parse(string, variables, unresolved_vars: :raise, replace_pattern: "##\\1##")
     variables ||= {}
     result_string = string.clone
+    # symbolize keys
+    variables = variables.map { |key, value| [key.to_sym, value] }.to_h
     if CurlyBracketParser.any_variable_included? string
       loop do
-        variables(string).each do |string_var|
+        variables(result_string).each do |string_var|
           dec = decode_variable(string_var)
           name = dec[:name]
           filter = dec[:filter]
@@ -56,7 +58,9 @@ module CurlyBracketParser
           end
         end
         # break if no more given variable is available
-        break unless any_variable_included?(string) && includes_one_variable_of(variables, string)
+        unless any_variable_included?(result_string) && includes_one_variable_of(variables.keys, result_string)
+          break
+        end
       end
       case unresolved_vars
       when :raise
@@ -303,7 +307,7 @@ module CurlyBracketParser
   # @return [Boolean] true if one given variable name is included in given the string, otherwise false
   def self.includes_one_variable_of(variable_names, string)
     decoded_variables(string).each do |dvar|
-      return true if variable_names.include?(dvar[:name])
+      return true if variable_names.map(&:to_sym).include?(dvar[:name].to_sym)
     end
     false
   end
