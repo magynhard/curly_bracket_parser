@@ -580,3 +580,98 @@ RSpec.describe CurlyBracketParser, '#parse' do
   end
 end
 
+
+
+
+RSpec.describe CurlyBracketParser, '#parse' do
+  context 'Using embedded variables' do
+    it 'embeds a single quoted string' do
+      expect(CurlyBracketParser.parse("This is a normal {{variable}} and a {{'embedded'}} one.", {variable: 'variable'}))
+        .to eql('This is a normal variable and a embedded one.')
+    end
+    it 'embeds a single quoted string with filter' do
+      expect(CurlyBracketParser.parse("This is a normal {{variable}} and a {{'embedded'|pascal_case}} one.", {variable: 'variable'}))
+        .to eql('This is a normal variable and a Embedded one.')
+    end
+    it 'embeds a single quoted string with filter and white spaces' do
+      expect(CurlyBracketParser.parse("This is a normal {{variable}} and a {{ 'embedded'   | pascal_case  }} one.", {variable: 'variable'}))
+        .to eql('This is a normal variable and a Embedded one.')
+    end
+    it 'embeds a double quoted string' do
+      expect(CurlyBracketParser.parse(%Q(This is a normal {{variable}} and a {{"embedded"}} one.), {variable: 'variable'}))
+        .to eql('This is a normal variable and a embedded one.')
+    end
+    it 'embeds a double quoted string with filter' do
+      expect(CurlyBracketParser.parse(%Q(This is a normal {{variable}} and a {{"embedded"|pascal_case}} one.), {variable: 'variable'}))
+        .to eql('This is a normal variable and a Embedded one.')
+    end
+    it 'embeds integers without filters' do
+      expect(CurlyBracketParser.parse("Peter is {{3}} years old.")).to eql("Peter is 3 years old.")
+      expect(CurlyBracketParser.parse("Peter is {{77}} years old.")).to eql("Peter is 77 years old.")
+      expect(CurlyBracketParser.parse("Peter is {{500_000}} years old.")).to eql("Peter is 500000 years old.")
+    end
+    it 'embeds integers without with filters' do
+      CurlyBracketParser.register_filter 'double' do |val|
+        return val*2;
+      end
+      expect(CurlyBracketParser.parse("Peter is {{3|double}} years old.")).to eql("Peter is 6 years old.")
+      expect(CurlyBracketParser.parse("Peter is {{77|double}} years old.")).to eql('Peter is 154 years old.')
+      expect(CurlyBracketParser.parse("Peter is {{500_000|double}} years old.")).to eql('Peter is 1000000 years old.')
+    end
+    it 'embeds floating point numbers without filters' do
+      expect(CurlyBracketParser.parse("Peter is {{3.0}} years old.")).to eql("Peter is 3 years old.")
+      expect(CurlyBracketParser.parse("Peter is {{7.}} years old.")).to eql("Peter is 7 years old.")
+      expect(CurlyBracketParser.parse("Peter is {{7.5}} years old.")).to eql("Peter is 7.5 years old.")
+      expect(CurlyBracketParser.parse("Peter is {{0.8}} years old.")).to eql("Peter is 0.8 years old.")
+      expect(CurlyBracketParser.parse("Peter is {{.9}} years old.")).to eql("Peter is 0.9 years old.")
+      expect(CurlyBracketParser.parse("Peter is {{500_0.00}} years old.")).to eql("Peter is 5000 years old.")
+    end
+    it 'does not embed invalid integers' do
+      expect{ CurlyBracketParser.parse("Peter is {{3_}} years old.") }.to raise_error(UnresolvedVariablesError)
+    end
+    it 'embeds a single quoted string without content' do
+      expect(CurlyBracketParser.parse("This is a normal {{variable}} and a {{''}} one.", {variable: 'variable'}))
+        .to eql('This is a normal variable and a  one.')
+    end
+    it 'embeds a single quoted string with white space content' do
+      expect(CurlyBracketParser.parse("This is a normal {{variable}} and a {{' '}} one.", {variable: 'variable'}))
+        .to eql('This is a normal variable and a   one.')
+    end
+    it 'embeds a double quoted string without content' do
+      expect(CurlyBracketParser.parse(%Q(This is a normal {{variable}} and a {{""}} one.), {variable: 'variable'}))
+        .to eql('This is a normal variable and a  one.')
+    end
+    it 'embeds a double quoted string with white space content' do
+      expect(CurlyBracketParser.parse(%Q(This is a normal {{variable}} and a {{" "}} one.), {variable: 'variable'}))
+        .to eql('This is a normal variable and a   one.')
+    end
+    it 'embeds a single quoted string without content and filter' do
+      expect(CurlyBracketParser.parse(%Q(This is a normal {{variable}} and a {{''|pascal_case}} one.), {variable: 'variable'}))
+        .to eql('This is a normal variable and a  one.')
+    end
+    it 'embeds a double quoted string without content and filter' do
+      expect(CurlyBracketParser.parse(%Q(This is a normal {{variable}} and a {{""|pascal_case}} one.), {variable: 'variable'}))
+        .to eql('This is a normal variable and a  one.')
+    end
+    it 'embeds a empty content with filter' do
+      expect(CurlyBracketParser.parse(%Q(This is a normal {{variable}} and a {{|pascal_case}} one.), {variable: 'variable'}))
+        .to eql('This is a normal variable and a  one.')
+    end
+    it 'embeds a empty content without filter' do
+      expect(CurlyBracketParser.parse(%Q(This is a normal {{variable}} and a {{}} one.), {variable: 'variable'}))
+        .to eql('This is a normal variable and a  one.')
+    end
+    it 'embeds a empty content with empty filter' do
+      expect(CurlyBracketParser.parse(%Q(This is a normal {{variable}} and a {{|}} one.), {variable: 'variable'}))
+        .to eql('This is a normal variable and a  one.')
+    end
+    it 'embeds a single quoted content without filter' do
+      expect(CurlyBracketParser.parse(%Q(This is a normal {{'variable'}}.), {variable: 'variable'}))
+        .to eql('This is a normal variable.')
+    end
+    it 'embeds a double quoted content without filter' do
+      expect(CurlyBracketParser.parse(%Q(This is a normal {{"variable"}}.), {variable: 'variable'}))
+        .to eql('This is a normal variable.')
+    end
+  end
+end
