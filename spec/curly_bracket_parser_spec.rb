@@ -586,8 +586,10 @@ end
 RSpec.describe CurlyBracketParser, '#parse' do
   context 'Using embedded variables' do
     it 'embeds a single quoted string' do
-      expect(CurlyBracketParser.parse("This is a normal {{variable}} and a {{'embedded'}} one.", {variable: 'variable'}))
-        .to eql('This is a normal variable and a embedded one.')
+      string = "This is a normal {{variable}} and a {{'embedded'}} one."
+      expected_string = 'This is a normal variable and a embedded one.'
+      variables = {variable: 'variable'}
+      expect(CurlyBracketParser.parse(string, variables)).to eql(expected_string)
     end
     it 'embeds a single quoted string with filter' do
       expect(CurlyBracketParser.parse("This is a normal {{variable}} and a {{'embedded'|pascal_case}} one.", {variable: 'variable'}))
@@ -612,19 +614,17 @@ RSpec.describe CurlyBracketParser, '#parse' do
     end
     it 'embeds integers without with filters' do
       CurlyBracketParser.register_filter 'double' do |val|
-        return val*2;
+        val*2;
       end
       expect(CurlyBracketParser.parse("Peter is {{3|double}} years old.")).to eql("Peter is 6 years old.")
       expect(CurlyBracketParser.parse("Peter is {{77|double}} years old.")).to eql('Peter is 154 years old.')
       expect(CurlyBracketParser.parse("Peter is {{500_000|double}} years old.")).to eql('Peter is 1000000 years old.')
     end
     it 'embeds floating point numbers without filters' do
-      expect(CurlyBracketParser.parse("Peter is {{3.0}} years old.")).to eql("Peter is 3 years old.")
-      expect(CurlyBracketParser.parse("Peter is {{7.}} years old.")).to eql("Peter is 7 years old.")
+      expect(CurlyBracketParser.parse("Peter is {{3.000}} years old.")).to eql("Peter is 3.0 years old.")
       expect(CurlyBracketParser.parse("Peter is {{7.5}} years old.")).to eql("Peter is 7.5 years old.")
       expect(CurlyBracketParser.parse("Peter is {{0.8}} years old.")).to eql("Peter is 0.8 years old.")
-      expect(CurlyBracketParser.parse("Peter is {{.9}} years old.")).to eql("Peter is 0.9 years old.")
-      expect(CurlyBracketParser.parse("Peter is {{500_0.00}} years old.")).to eql("Peter is 5000 years old.")
+      expect(CurlyBracketParser.parse("Peter is {{500_0.00}} years old.")).to eql("Peter is 5000.0 years old.")
     end
     it 'does not embed invalid integers' do
       expect{ CurlyBracketParser.parse("Peter is {{3_}} years old.") }.to raise_error(UnresolvedVariablesError)
@@ -672,6 +672,10 @@ RSpec.describe CurlyBracketParser, '#parse' do
     it 'embeds a double quoted content without filter' do
       expect(CurlyBracketParser.parse(%Q(This is a normal {{"variable"}}.), {variable: 'variable'}))
         .to eql('This is a normal variable.')
+    end
+    it 'embeds a integer number written in hex' do
+      expect(CurlyBracketParser.parse("Peter is {{0x111}} years old.")).to eql("Peter is 273 years old.")
+      expect(CurlyBracketParser.parse("Peter is {{0xFf}} years old.")).to eql("Peter is 255 years old.")
     end
   end
 end

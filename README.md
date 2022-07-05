@@ -50,15 +50,25 @@ You can either parse variables inside strings or even directly in files.
 
 ```ruby
     url = "https://my-domain.com/items/{{item_id}}"
-    final_url = CurlyBracketParser.parse url, item_id: 123
+    final_url = CurlyBracketParser.parse url, { item_id: 123 }
     # => "https://my-domain.com/items/123"
 ```
+
+Nested variables are supported as well:
+```ruby
+    tmpl = "This is my template with {{my_nested_variable}}";
+    my_nested_variable = "my {{nested}} variable"; 
+    parsed_tmpl = CurlyBracketParser.parse tmpl, { my_nested_variable: my_nested_variable, nested: 'pizza'}
+    # => "This is my template with my pizza variable"
+```
+
+
 
 ### Filters
 
 ```ruby
     url = "https://my-domain.com/catalog/{{item_name|snake_case}}"
-    final_url = CurlyBracketParser.parse url, item_name: 'MegaSuperItem'
+    final_url = CurlyBracketParser.parse url, { item_name: 'MegaSuperItem' }
     # => "https://my-domain.com/catalog/mega_super_item"
 ```
 
@@ -72,9 +82,25 @@ For a list of built-in filters visit [LuckyCase](https://github.com/magynhard/lu
     end
 
     text = "Paul went out and screamed: A{{scream|7times}}h"
-    final_text = CurlyBracketParser.parse text, scream: 'a'
+    final_text = CurlyBracketParser.parse text, { scream: 'a' }
     # => "Paul went out and screamed: Aaaaaaaah"
 ```
+
+
+### Value variables
+
+For special cases you can directly define or set variables inside the template - usually it does only make sense, if you combine them with custom filters.
+
+You can either use quotes to define a string or numbers (integer or floating point) directly.
+
+Empty values are possible as well. They are equal to a empty string.
+
+```ruby
+    tmpl = %Q(This is a {{'string'|pascal_case}} and today is {{"today"|date_filter}}. Peter is {{'1990-10-05'|iso_date_age}} years old. His girlfriends name is {{girl|pascal_case}} and she is {{16|double_number}} years old. This article has been written at {{|date_now_formatted}}`)
+    parsed = CurlyBracketParser.parse tmpl, { girl: "anna" }
+    # => "This is a String and today is 2022-06-27. Peter is 32 years old. His girlfriends name is Anna and she is 32 years old. This article has been written at 6/28/2022, 12:46:40 PM."
+```
+
 
 ### Files
 
@@ -84,7 +110,7 @@ For a list of built-in filters visit [LuckyCase](https://github.com/magynhard/lu
 ```
 
 ```ruby
-    parsed_file = CurlyBracketParser.parse_file './test.html', title: 'WelcomeAtHome'
+    parsed_file = CurlyBracketParser.parse_file './test.html', { title: 'WelcomeAtHome' }
     # => "<h1>Welcome at home</h1>"
 ```
 
@@ -104,7 +130,7 @@ Because of providing blocks, your variables can dynamically depend on other stat
     text = "You are running version {{version}}"
     CurlyBracketParser.parse text
     # => "You are running version 1.0.2"
-    CurlyBracketParser.parse text, version: '0.7.0'
+    CurlyBracketParser.parse text, { version: '0.7.0' }
     # => "You are running version 0.7.0"
 ```
 

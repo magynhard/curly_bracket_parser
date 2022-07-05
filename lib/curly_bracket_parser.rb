@@ -18,8 +18,8 @@ require_relative 'custom_errors/variable_already_registered_error'
 module CurlyBracketParser
 
   # {{variable_name|optional_filter}}
-  VARIABLE_DECODER_REGEX = /{{([^{}\|]+)\|?([^{}\|]*)}}/
-  VARIABLE_REGEX = /{{[^{}]+}}/
+  VARIABLE_DECODER_REGEX = /{{([^{}\|]*)\|?([^{}\|]*)}}/
+  VARIABLE_REGEX = /{{[^{}]*}}/
 
   VALID_DEFAULT_FILTERS = [
     LuckyCase::CASES.keys.map(&:to_s)
@@ -31,11 +31,15 @@ module CurlyBracketParser
   #
   # @param [String] string to parse
   # @param [Hash<Symbol => String>] variables <key: 'value'>
-  # @param [Symbol] unresolved_vars :raise, :keep, :replace => define how to act when unresolved variables within the string are found.
-  # @param [String] replace_pattern pattern used when param unresolved_vars is set to :replace. You can include the var name \\1 and filter \\2. Empty string to remove unresolved variables.
+  # @param [Hash] options
+  # @param [Symbol] options.unresolved_vars :raise, :keep, :replace => define how to act when unresolved variables within the string are found.
+  # @param [String] options.replace_pattern pattern used when param unresolved_vars is set to :replace. You can include the var name \\1 and filter \\2. Empty string to remove unresolved variables.
   # @return [String, UnresolvedVariablesError] parsed string
-  def self.parse(string, variables = {}, unresolved_vars: :raise, replace_pattern: "##\\1##")
+  def self.parse(string, variables = {}, options = { unresolved_vars: :raise, replace_pattern: "##\\1##" })
     variables ||= {}
+    options ||= {}
+    options[:unresolved_vars] = :raise unless options[:unresolved_vars]
+    options[:replace_pattern] = "##\\1##" unless options[:replace_pattern]
     result_string = string.clone
     # symbolize keys
     variables = variables.map { |key, value| [key.to_sym, value] }.to_h
@@ -43,18 +47,24 @@ module CurlyBracketParser
       loop do
         variables(result_string).each do |string_var|
           dec = decode_variable(string_var)
-          name = dec[:name]
+          name = !dec[:name] || dec[:name] == '' ? "''" : dec[:name]
           filter = dec[:filter]
-          if variables[name.to_sym]
-            value = if filter
-                      process_filter(filter, variables[name.to_sym])
-                    else
-                      variables[name.to_sym]
-                    end
-            result_string.gsub!(string_var, value)
+          value = nil
+          is_single_quoted = name.start_with?("'") && name.end_with?("'")
+          is_double_quoted = name.start_with?('"') && name.end_with?('"')
+          # When the name itself is quoted as string or is a number, we use it as a value itself
+          if is_single_quoted || is_double_quoted
+            value = name[1...-1]
+          elsif CurlyBracketParser.number_string? name
+            value = eval(name)
+          elsif variables[name.to_sym]
+            value = variables[name.to_sym]
           elsif registered_default_var?(name.to_s)
             value = process_default_var(name)
-            result_string.gsub!(string_var, value)
+          end
+          if value
+            value = process_filter(filter, value) if filter
+            result_string.gsub!(string_var, value.to_s)
           end
         end
         # break if no more given variable is available
@@ -62,13 +72,13 @@ module CurlyBracketParser
           break
         end
       end
-      case unresolved_vars
+      case options[:unresolved_vars]
       when :raise
         if any_variable_included? result_string
           raise UnresolvedVariablesError, "There are unresolved variables in the given string: #{variables(result_string)}"
         end
       when :replace
-        result_string.gsub!(VARIABLE_DECODER_REGEX, replace_pattern)
+        result_string.gsub!(VARIABLE_DECODER_REGEX, options[:replace_pattern])
       end
     end
     result_string
@@ -310,6 +320,34 @@ module CurlyBracketParser
       return true if variable_names.map(&:to_sym).include?(dvar[:name].to_sym)
     end
     false
+  end
+
+  #----------------------------------------------------------------------------------------------------
+
+  #
+  # Check if given variable is a valid number inside a string that evaluates to a number in Ruby.
+  #
+  # @example
+  #     # valid number strings
+  #     '200'
+  #     '25.75'
+  #     '500_000'
+  #     '0x1fF'
+  #
+  # @param [String] name
+  # @return [Boolean]
+  def self.number_string?(name)
+    number_regex = /(^[0-9]+[0-9_]*([.][0-9_]*[0-9]+)?$|^0[xX][0-9A-Fa-f]+$)/
+    if (name =~ number_regex) != nil
+      begin
+        eval name
+        true
+      rescue StandardError, SyntaxError => e
+        false
+      end
+    else
+      false
+    end
   end
 
   #----------------------------------------------------------------------------------------------------
